@@ -546,23 +546,26 @@ def value_func_heatmap(env, value_func):
 		return None
 
 
-def q1_2(env, gamma):
-	policy, value_func, num_improv_iter, num_value_iter = policy_iteration_sync(env, gamma)
-	print('Optimal policy for {}:'.format(env_name))
-	display_policy_letters(env, policy)
-	print()
-	value_func_heatmap(env, value_func)
+def q1_2(gamma):
+	envs = ['Deterministic-4x4-FrozenLake-v0', 'Deterministic-8x8-FrozenLake-v0']
+	
+	for env_name in envs:
+		env = gym.make(env_name)		
+		policy, value_func, num_improv_iter, num_value_iter = policy_iteration_sync(env, gamma)
+		print('Optimal policy for {}:'.format(env_name))
+		display_policy_letters(env, policy)
+		print()
+		value_func_heatmap(env, value_func)
+	
+	# Show the generated heatmaps
+	plt.show()
+
+
+def q1_4(env, gamma):
+	pass
 
 
 if __name__ == "__main__":
-	envs = ['Deterministic-4x4-FrozenLake-v0', 'Deterministic-8x8-FrozenLake-v0']
 	# Define num_trials, gamma and whatever variables you need below.
 	gamma = 0.9
-
-	for env_name in envs:
-		env = gym.make(env_name)
-
-		q1_2(env, gamma)
-
-	# Show the generated heatmaps
-	plt.show()
+	q1_2(gamma)
