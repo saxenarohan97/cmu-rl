@@ -95,11 +95,10 @@ def evaluate_policy_sync(env, value_func, gamma, policy, max_iterations=int(1e3)
 					delta = max(delta, abs(value_func[state] - updated_value[state]))
 			
 			value_func = updated_value
+			num_iterations += 1
 
 			if delta < tol:
 					break
-			
-			num_iterations += 1
 
 		return value_func, num_iterations
 
@@ -146,10 +145,10 @@ def evaluate_policy_async_ordered(env, value_func, gamma, policy, max_iterations
 				value_func[state] = reward + gamma * value_func[nextstate]
 				delta = max(delta, abs(value_func[state] - old_value))
 
+			num_iterations += 1
+
 			if delta < tol:
 				break
-			
-			num_iterations += 1
 
 		return value_func, num_iterations
 
@@ -196,10 +195,10 @@ def evaluate_policy_async_randperm(env, value_func, gamma, policy, max_iteration
 				value_func[state] = reward + gamma * value_func[nextstate]
 				delta = max(delta, abs(value_func[state] - old_value))
 
+			num_iterations += 1
+
 			if delta < tol:
 				break
-			
-			num_iterations += 1
 
 		return value_func, num_iterations
 
@@ -369,27 +368,48 @@ def policy_iteration_async_randperm(env, gamma, max_iterations=int(1e3),
 
 
 def value_iteration_sync(env, gamma, max_iterations=int(1e3), tol=1e-3):
-		"""Runs value iteration for a given gamma and environment.
+	"""Runs value iteration for a given gamma and environment.
 
-		Parameters
-		----------
-		env: gym.core.Environment
-			The environment to compute value iteration for. Must have nS,
-			nA, and P as attributes.
-		gamma: float
-			Discount factor, must be in range [0, 1)
-		max_iterations: int
-			The maximum number of iterations to run before stopping.
-		tol: float
-			Determines when value function has converged.
+	Parameters
+	----------
+	env: gym.core.Environment
+		The environment to compute value iteration for. Must have nS,
+		nA, and P as attributes.
+	gamma: float
+		Discount factor, must be in range [0, 1)
+	max_iterations: int
+		The maximum number of iterations to run before stopping.
+	tol: float
+		Determines when value function has converged.
 
-		Returns
-		-------
-		np.ndarray, iteration
-			The value function and the number of iterations it took to converge.
-		"""
-		value_func = np.zeros(env.nS)  # initialize value function
-		return value_func, 0
+	Returns
+	-------
+	np.ndarray, iteration
+		The value function and the number of iterations it took to converge.
+	"""
+	value_func = np.zeros(env.nS)  # initialize value function
+	num_iters = 0
+
+	while num_iters < max_iterations:
+		delta = 0
+		updated_value_func = np.copy(value_func)
+
+		for state in range(env.nS):
+			action_values = []
+			for action in range(env.nA):
+				prob, nextstate, reward, is_terminal = env.P[state][action][0]
+				action_values.append(reward + gamma * value_func[nextstate])
+
+			updated_value_func[state] = np.argmax(action_values)
+			delta = max(delta, abs(updated_value_func[state] - value_func[state]))
+
+		value_func = updated_value_func
+		num_iters += 1
+
+		if delta < tol:
+			break
+
+	return value_func, num_iters
 
 
 def value_iteration_async_ordered(env, gamma, max_iterations=int(1e3), tol=1e-3):
@@ -561,6 +581,24 @@ def q1_2(gamma):
 	plt.show()
 
 
+def q1_3(gamma):
+	envs = ['Deterministic-4x4-FrozenLake-v0', 'Deterministic-8x8-FrozenLake-v0']
+
+	for env_name in envs:
+		env = gym.make(env_name)
+		value_func, num_iters = value_iteration_sync(env, gamma, max_iterations=1e10)
+		print(env_name + ':')
+		print('Number of iterations = {}'.format(num_iters))
+		print('Display policy:')
+		display_policy_letters(env, policy)
+		print()
+		value_func_heatmap(env, value_func)
+	
+	# Show the generated heatmaps
+	plt.show()
+		
+
+
 def q1_4(gamma):
 	env = gym.make('Deterministic-8x8-FrozenLake-v0')
 
@@ -580,13 +618,15 @@ def q1_4(gamma):
 	
 	print('10 trials of async_randperm:')
 	print('Policy improvement steps: {}'.format(np.mean(randperm_improv_iter)))
-	print('Total policy evaluation steps: {}'.format(np.mean(randperm_value_iter)))
+	print('Total policy evaluation steps: {}\n'.format(np.mean(randperm_value_iter)))
 
 
 if __name__ == "__main__":
 	# Define num_trials, gamma and whatever variables you need below.
 	gamma = 0.9
 	
-	q1_2(gamma)
+	# q1_2(gamma)
 
-	q1_4(gamma)
+	# q1_4(gamma)
+
+	q1_3(gamma)
