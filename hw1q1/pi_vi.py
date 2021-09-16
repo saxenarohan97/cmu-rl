@@ -6,7 +6,10 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import gym
-import hw1q1.lake_envs as lake_env
+try:
+	import hw1q1.lake_envs as lake_env
+except:
+	import lake_envs as lake_env
 
 
 def print_policy(policy, action_names):
@@ -85,9 +88,9 @@ def evaluate_policy_sync(env, value_func, gamma, policy, max_iterations=int(1e3)
 				delta = 0
 				updated_value = np.copy(value_func)
 
-				for state in env.nS:
+				for state in range(env.nS):
 						action = policy[state]
-						prob, nextstate, reward, is_terminal = env.P[state][action]
+						prob, nextstate, reward, is_terminal = env.P[state][action][0]
 						updated_value[state] = reward + gamma * value_func[nextstate]
 						delta = max(delta, abs(value_func[state] - updated_value[state]))
 				
@@ -190,11 +193,11 @@ def improve_policy(env, gamma, value_func, policy):
 		policy_stable = True
 		policy = np.copy(policy)
 
-		for state in env.nS:
+		for state in range(env.nS):
 				old_action = policy[state]
 				action_values = []
-				for action in env.nA:
-						prob, nextstate, reward, is_terminal = env.P[state][action]
+				for action in range(env.nA):
+						prob, nextstate, reward, is_terminal = env.P[state][action][0]
 						action_values.append(reward + gamma * value_func[nextstate])
 				
 				policy[state] = np.argmax(action_values)
@@ -487,3 +490,9 @@ def value_func_heatmap(env, value_func):
 if __name__ == "__main__":
 		envs = ['Deterministic-4x4-FrozenLake-v0', 'Deterministic-8x8-FrozenLake-v0']
 		# Define num_trials, gamma and whatever variables you need below.
+		gamma = 0.9
+
+		for env in envs:
+			env = gym.make(env)
+
+			policy, value_func, num_improv_iter, num_value_iter = policy_iteration_sync(env, gamma)
