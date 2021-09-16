@@ -85,21 +85,21 @@ def evaluate_policy_sync(env, value_func, gamma, policy, max_iterations=int(1e3)
 		num_iterations = 0
 
 		while num_iterations < max_iterations:
-				delta = 0
-				updated_value = np.copy(value_func)
+			delta = 0
+			updated_value = np.copy(value_func)
 
-				for state in range(env.nS):
-						action = policy[state]
-						prob, nextstate, reward, is_terminal = env.P[state][action][0]
-						updated_value[state] = reward + gamma * value_func[nextstate]
-						delta = max(delta, abs(value_func[state] - updated_value[state]))
-				
-				value_func = updated_value
+			for state in range(env.nS):
+					action = policy[state]
+					prob, nextstate, reward, is_terminal = env.P[state][action][0]
+					updated_value[state] = reward + gamma * value_func[nextstate]
+					delta = max(delta, abs(value_func[state] - updated_value[state]))
+			
+			value_func = updated_value
 
-				if delta < tol:
-						break
-				
-				num_iterations += 1
+			if delta < tol:
+					break
+			
+			num_iterations += 1
 
 		return value_func, num_iterations
 
@@ -133,7 +133,25 @@ def evaluate_policy_async_ordered(env, value_func, gamma, policy, max_iterations
 			the value function converged.
 		"""
 
-		return value_func, 0
+		num_iterations = 0
+		value_func = np.copy(value_func)
+
+		while num_iterations < max_iterations:
+			delta = 0
+
+			for state in range(env.nS):
+				action = policy[state]
+				prob, nextstate, reward, is_terminal = env.P[state][action][0]
+				old_value = value_func[state]
+				value_func[state] = reward + gamma * value_func[nextstate]
+				delta = max(delta, abs(value_func[state] - old_value))
+
+			if delta < tol:
+				break
+			
+			num_iterations += 1
+
+		return value_func, num_iterations
 
 
 def evaluate_policy_async_randperm(env, value_func, gamma, policy, max_iterations=int(1e3), tol=1e-3):
@@ -165,7 +183,26 @@ def evaluate_policy_async_randperm(env, value_func, gamma, policy, max_iteration
 			the value function converged.
 		"""
 
-		return value_func, 0
+		num_iterations = 0
+		value_func = np.copy(value_func)
+
+		while num_iterations < max_iterations:
+			delta = 0
+
+			for state in np.random.permutation(range(env.nS)):
+				action = policy[state]
+				prob, nextstate, reward, is_terminal = env.P[state][action][0]
+				old_value = value_func[state]
+				value_func[state] = reward + gamma * value_func[nextstate]
+				delta = max(delta, abs(value_func[state] - old_value))
+
+			if delta < tol:
+				break
+			
+			num_iterations += 1
+
+		return value_func, num_iterations
+
 
 def improve_policy(env, gamma, value_func, policy):
 		"""Performs policy improvement.
@@ -194,16 +231,16 @@ def improve_policy(env, gamma, value_func, policy):
 		policy = np.copy(policy)
 
 		for state in range(env.nS):
-				old_action = policy[state]
-				action_values = []
-				for action in range(env.nA):
-						prob, nextstate, reward, is_terminal = env.P[state][action][0]
-						action_values.append(reward + gamma * value_func[nextstate])
-				
-				policy[state] = np.argmax(action_values)
-				
-				if old_action != policy[state]:
-					policy_stable = False
+			old_action = policy[state]
+			action_values = []
+			for action in range(env.nA):
+				prob, nextstate, reward, is_terminal = env.P[state][action][0]
+				action_values.append(reward + gamma * value_func[nextstate])
+			
+			policy[state] = np.argmax(action_values)
+			
+			if old_action != policy[state]:
+				policy_stable = False
 
 		return policy_stable, policy
 
@@ -242,16 +279,15 @@ def policy_iteration_sync(env, gamma, max_iterations=int(1e3), tol=1e-3):
 		total_value_iter = 0
 
 		while not policy_stable:
-				value_func, num_eval_iter = evaluate_policy_sync(env, value_func, gamma, policy, max_iterations, tol)
-				total_value_iter += num_eval_iter
-				policy_stable, policy = improve_policy(env, gamma, value_func, policy)
-				num_improv_iter += 1
+			value_func, num_eval_iter = evaluate_policy_sync(env, value_func, gamma, policy, max_iterations, tol)
+			total_value_iter += num_eval_iter
+			policy_stable, policy = improve_policy(env, gamma, value_func, policy)
+			num_improv_iter += 1
 
 		return policy, value_func, num_improv_iter, total_value_iter
 
 
-def policy_iteration_async_ordered(env, gamma, max_iterations=int(1e3),
-																	 tol=1e-3):
+def policy_iteration_async_ordered(env, gamma, max_iterations=int(1e3), tol=1e-3):
 		"""Runs policy iteration.
 
 		You should use the improve_policy and evaluate_policy_async_ordered methods
@@ -277,7 +313,18 @@ def policy_iteration_async_ordered(env, gamma, max_iterations=int(1e3),
 		"""
 		policy = np.zeros(env.nS, dtype='int')
 		value_func = np.zeros(env.nS)
-		return policy, value_func, 0, 0
+
+		policy_stable = False
+		num_improv_iter = 0
+		total_value_iter = 0
+
+		while not policy_stable:
+			value_func, num_eval_iter = evaluate_policy_async_ordered(env, value_func, gamma, policy, max_iterations, tol)
+			total_value_iter += num_eval_iter
+			policy_stable, policy = improve_policy(env, gamma, value_func, policy)
+			num_improv_iter += 1
+
+		return policy, value_func, num_improv_iter, total_value_iter
 
 
 def policy_iteration_async_randperm(env, gamma, max_iterations=int(1e3),
@@ -307,7 +354,19 @@ def policy_iteration_async_randperm(env, gamma, max_iterations=int(1e3),
 		"""
 		policy = np.zeros(env.nS, dtype='int')
 		value_func = np.zeros(env.nS)
-		return policy, value_func, 0, 0
+
+		policy_stable = False
+		num_improv_iter = 0
+		total_value_iter = 0
+
+		while not policy_stable:
+			value_func, num_eval_iter = evaluate_policy_async_randperm(env, value_func, gamma, policy, max_iterations, tol)
+			total_value_iter += num_eval_iter
+			policy_stable, policy = improve_policy(env, gamma, value_func, policy)
+			num_improv_iter += 1
+
+		return policy, value_func, num_improv_iter, total_value_iter
+
 
 def value_iteration_sync(env, gamma, max_iterations=int(1e3), tol=1e-3):
 		"""Runs value iteration for a given gamma and environment.
@@ -487,16 +546,23 @@ def value_func_heatmap(env, value_func):
 		return None
 
 
+def q1_2(env, gamma):
+	policy, value_func, num_improv_iter, num_value_iter = policy_iteration_sync(env, gamma)
+	print('Optimal policy for {}:'.format(env_name))
+	display_policy_letters(env, policy)
+	print()
+	value_func_heatmap(env, value_func)
+
+
 if __name__ == "__main__":
-		envs = ['Deterministic-4x4-FrozenLake-v0', 'Deterministic-8x8-FrozenLake-v0']
-		# Define num_trials, gamma and whatever variables you need below.
-		gamma = 0.9
+	envs = ['Deterministic-4x4-FrozenLake-v0', 'Deterministic-8x8-FrozenLake-v0']
+	# Define num_trials, gamma and whatever variables you need below.
+	gamma = 0.9
 
-		for env_name in envs:
-			env = gym.make(env_name)
+	for env_name in envs:
+		env = gym.make(env_name)
 
-			policy, value_func, num_improv_iter, num_value_iter = policy_iteration_sync(env, gamma)
+		q1_2(env, gamma)
 
-			print('Optimal policy for {}:'.format(env_name))
-			display_policy_letters(env, policy)
-			print()
+	# Show the generated heatmaps
+	plt.show()
