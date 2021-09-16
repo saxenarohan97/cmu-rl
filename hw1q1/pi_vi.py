@@ -492,7 +492,11 @@ if __name__ == "__main__":
 		# Define num_trials, gamma and whatever variables you need below.
 		gamma = 0.9
 
-		for env in envs:
-			env = gym.make(env)
+		for env_name in envs:
+			env = gym.make(env_name)
 
 			policy, value_func, num_improv_iter, num_value_iter = policy_iteration_sync(env, gamma)
+
+			print('Optimal policy for {}:'.format(env_name))
+			display_policy_letters(env, policy)
+			print()
