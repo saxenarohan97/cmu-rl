@@ -561,11 +561,32 @@ def q1_2(gamma):
 	plt.show()
 
 
-def q1_4(env, gamma):
-	pass
+def q1_4(gamma):
+	env = gym.make('Deterministic-8x8-FrozenLake-v0')
+
+	# One trial for async_ordered heuristic
+	policy, value_func, num_improv_iter, num_value_iter = policy_iteration_async_ordered(env, gamma)
+	print('1 trial of async_ordered:')
+	print('Policy improvement steps: {}'.format(num_improv_iter))
+	print('Total policy evaluation steps: {}\n'.format(num_value_iter))
+
+	# Ten trials for async_randperm heuristic
+	randperm_improv_iter = []
+	randperm_value_iter = []
+	for i in range(10):
+		policy, value_func, num_improv_iter, num_value_iter = policy_iteration_async_ordered(env, gamma)
+		randperm_improv_iter.append(num_improv_iter)
+		randperm_value_iter.append(num_value_iter)
+	
+	print('10 trials of async_randperm:')
+	print('Policy improvement steps: {}'.format(np.mean(randperm_improv_iter)))
+	print('Total policy evaluation steps: {}'.format(np.mean(randperm_value_iter)))
 
 
 if __name__ == "__main__":
 	# Define num_trials, gamma and whatever variables you need below.
 	gamma = 0.9
+	
 	q1_2(gamma)
+
+	q1_4(gamma)
