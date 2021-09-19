@@ -6,7 +6,8 @@ from __future__ import (absolute_import, division, print_function,
 from builtins import input
 
 import gym
-import lake_envs as lake_env
+import lake_envs
+from pi_vi import *
 import time
 
 
@@ -73,16 +74,28 @@ def main():
     env = gym.make('Deterministic-4x4-FrozenLake-v0')
 
     print_env_info(env)
-    print_model_info(env, 0, lake_env.DOWN)
-    print_model_info(env, 1, lake_env.DOWN)
-    print_model_info(env, 14, lake_env.RIGHT)
-
-    input('Hit enter to run a random policy...')
-
-    total_reward, num_steps = run_random_policy(env)
-    print('Agent received total reward of: %f' % total_reward)
-    print('Agent took %d steps' % num_steps)
-
+    # print_model_info(env, 0, lake_env.DOWN)
+    # print_model_info(env, 1, lake_env.DOWN)
+    # print_model_info(env, 14, lake_env.RIGHT)
+    
+    
+    # policy, value_func, num_improv_iter, total_value_iter = policy_iteration_sync(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
+    # policy, value_func, num_improv_iter, total_value_iter = policy_iteration_async_ordered(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
+    # policy, value_func, num_improv_iter, total_value_iter = policy_iteration_async_randperm(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
+    
+    # print(f'Improvement steps: {num_improv_iter}.')
+    # print(f'Value steps: {total_value_iter}.')
+    
+    # policy, value_func, num_iters = value_iteration_sync(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
+    # policy, value_func, num_iters = value_iteration_async_ordered(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
+    # policy, value_func, num_iters = value_iteration_async_randperm(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
+    # policy, value_func, num_iters = value_iteration_async_custom(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
+    
+    print(f'Number of iterations: {num_iters}.')
+    
+    
+    value_func_heatmap(env, value_func)
+    display_policy_letters(env, policy)
 
 if __name__ == '__main__':
     main()
