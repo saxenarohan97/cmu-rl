@@ -361,7 +361,7 @@ def policy_iteration_async_randperm(env, gamma, max_iterations=int(1e3),
     total_value_iter = 0
 
     while not policy_stable:
-        value_func, num_eval_iter = evaluate_policy_async_ordered(env, value_func, 
+        value_func, num_eval_iter = evaluate_policy_async_randperm(env, value_func, 
                                                          gamma, policy, 
                                                          max_iterations, tol)
         total_value_iter += num_eval_iter
