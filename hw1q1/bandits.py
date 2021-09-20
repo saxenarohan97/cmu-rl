@@ -154,7 +154,7 @@ cs = [0, 1, 2, 5]
 
 for c in cs:
     for i in range(NUM_RUNS):
-        agent = Agent()
+        agent = Agent(initialization=1)
         temp_for_avg.append(agent.ucb_run(bandit, c=c))
     expected_rewards = np.mean(temp_for_avg, axis=0)
 
@@ -208,7 +208,7 @@ plt.plot([i for i in range(ITERS)], expected_rewards,
 temp_for_avg=[]
 c = 2
 for i in range(NUM_RUNS):
-    agent = Agent()
+    agent = Agent(initialization=1)
     temp_for_avg.append(agent.ucb_run(bandit, c=c))
 expected_rewards = np.mean(temp_for_avg, axis=0)
 plt.plot([i for i in range(ITERS)], expected_rewards,
