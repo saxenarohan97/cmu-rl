@@ -97,8 +97,8 @@ def evaluate_policy_sync(env, value_func, gamma, policy, max_iterations=int(1e3)
             updated_value[state] = reward + gamma * value_func[nextstate]
             delta = max(delta, abs(value_func[state] - updated_value[state]))
 			
-            value_func = updated_value
-            num_iterations += 1
+        value_func = updated_value
+        num_iterations += 1
 
         if delta < tol:
             break
@@ -146,7 +146,7 @@ def evaluate_policy_async_ordered(env, value_func, gamma, policy, max_iterations
             next_val = reward + gamma * value_func[nextstate]
             delta = max(delta, abs(value_func[state] - next_val))
             value_func[state] = next_val
-            num_iterations += 1
+        num_iterations += 1
 
         if delta < tol:
             break
@@ -194,7 +194,7 @@ def evaluate_policy_async_randperm(env, value_func, gamma, policy, max_iteration
             next_val = reward + gamma * value_func[nextstate]
             delta = max(delta, abs(value_func[state] - next_val))
             value_func[state] = next_val
-            num_iterations += 1
+        num_iterations += 1
 
         if delta < tol:
             break
