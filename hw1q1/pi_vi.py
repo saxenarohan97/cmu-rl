@@ -89,16 +89,16 @@ def evaluate_policy_sync(env, value_func, gamma, policy, max_iterations=int(1e3)
 			updated_value = np.copy(value_func)
 
 			for state in range(env.nS):
-					action = policy[state]
-					prob, nextstate, reward, is_terminal = env.P[state][action][0]
-					updated_value[state] = reward + gamma * value_func[nextstate]
-					delta = max(delta, abs(value_func[state] - updated_value[state]))
+				action = policy[state]
+				prob, nextstate, reward, is_terminal = env.P[state][action][0]
+				updated_value[state] = reward + gamma * value_func[nextstate]
+				delta = max(delta, abs(value_func[state] - updated_value[state]))
 			
 			value_func = updated_value
 			num_iterations += 1
 
 			if delta < tol:
-					break
+				break
 
 		return value_func, num_iterations
 
@@ -400,7 +400,7 @@ def value_iteration_sync(env, gamma, max_iterations=int(1e3), tol=1e-3):
 				prob, nextstate, reward, is_terminal = env.P[state][action][0]
 				action_values.append(reward + gamma * value_func[nextstate])
 
-			updated_value_func[state] = np.argmax(action_values)
+			updated_value_func[state] = max(action_values)
 			delta = max(delta, abs(updated_value_func[state] - value_func[state]))
 
 		value_func = updated_value_func
@@ -572,8 +572,11 @@ def q1_2(gamma):
 	for env_name in envs:
 		env = gym.make(env_name)		
 		policy, value_func, num_improv_iter, num_value_iter = policy_iteration_sync(env, gamma)
-		print('Optimal policy for {}:'.format(env_name))
+		print(env_name)
+		print('Optimal policy:')
 		display_policy_letters(env, policy)
+		print('# policy improvement steps: {}'.format(num_improv_iter))
+		print('# policy evaluation steps:  {}'.format(num_value_iter))
 		print()
 		value_func_heatmap(env, value_func)
 	
@@ -589,11 +592,21 @@ def q1_3(gamma):
 		value_func, num_iters = value_iteration_sync(env, gamma, max_iterations=1e10)
 		print(env_name + ':')
 		print('Number of iterations = {}'.format(num_iters))
-		print('Display policy:')
+		value_func_heatmap(env, value_func)
+		
+		# Calculate policy from value function
+		policy = np.zeros(env.nS)
+		for state in range(env.nS):
+			action_values = []
+			for action in range(env.nA):
+				prob, nextstate, reward, is_terminal = env.P[state][action][0]
+				action_values.append(reward + gamma * value_func[nextstate])
+			policy[state] = np.argmax(action_values)
+	
+		print('Optimal policy:')
 		display_policy_letters(env, policy)
 		print()
-		value_func_heatmap(env, value_func)
-	
+
 	# Show the generated heatmaps
 	plt.show()
 		
@@ -627,6 +640,6 @@ if __name__ == "__main__":
 	
 	# q1_2(gamma)
 
-	# q1_4(gamma)
+	# q1_3(gamma)
 
-	q1_3(gamma)
+	# q1_4(gamma)
