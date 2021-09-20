@@ -105,22 +105,23 @@ class Agent:
 
 bandit = Bandit()
 
-
 # ====================================================
 # EPSILON GREEDY
 
+
 temp_for_avg = []
+epss = [0, 0.001, 0.01, 0.1, 1]
 
-eps = 0.1
+for eps in epss:
+    for i in range(NUM_RUNS):
+        agent = Agent()
+        temp_for_avg.append(agent.eps_greedy_run(bandit, eps))
+    
+    expected_rewards = np.mean(temp_for_avg, axis=0)
 
-for i in range(NUM_RUNS):
-    agent = Agent()
-    temp_for_avg.append(agent.eps_greedy_run(bandit, eps))
-
-expected_rewards = np.mean(temp_for_avg, axis=0)
-
-plt.plot([i for i in range(ITERS)], expected_rewards)
-plt.title(f'Eps-greedy with {eps}')
+    plt.plot([i for i in range(ITERS)], expected_rewards, label=f'eps={eps}')
+plt.legend()
+plt.title('Eps-greedy')
 plt.xlabel('Iteration')
 plt.ylabel('Expected reward')
 plt.show()
@@ -128,16 +129,16 @@ plt.show()
 # ====================================================
 # OPTIMISTIC INITIALIZATION
 
-initialization = 5
+initializations = [0, 1, 2, 5, 10]
 
-for i in range(NUM_RUNS):
+for initialization in initializations:
+    expected_rewards = []
     agent = Agent(initialization=initialization)
-    temp_for_avg.append(agent.eps_greedy_run(bandit, eps=0))
-
-expected_rewards = np.mean(temp_for_avg, axis=0)
-
-plt.plot([i for i in range(ITERS)], expected_rewards)
-plt.title(f'Optimistic with {initialization}')
+    expected_rewards.append(agent.eps_greedy_run(bandit, eps=0))
+    
+    plt.plot([i for i in range(ITERS)], expected_rewards[0], label=f'Init={initialization}')
+plt.legend()
+plt.title('Optimistic')
 plt.xlabel('Iteration')
 plt.ylabel('Expected reward')
 plt.show()
@@ -145,16 +146,16 @@ plt.show()
 # ====================================================
 # UCB
 
-c = 2
+cs = [0, 1, 2, 5]
 
-for i in range(NUM_RUNS):
+for c in cs:
+    expected_rewards = []
     agent = Agent()
-    temp_for_avg.append(agent.ucb_run(bandit, c=c))
+    expected_rewards.append(agent.ucb_run(bandit, c=c))
 
-expected_rewards = np.mean(temp_for_avg, axis=0)
-
-plt.plot([i for i in range(ITERS)], expected_rewards)
-plt.title(f'UCB with {c}')
+    plt.plot([i for i in range(ITERS)], expected_rewards[0], label=f'c={c}')
+plt.legend()
+plt.title('UCB')
 plt.xlabel('Iteration')
 plt.ylabel('Expected reward')
 plt.show()
@@ -162,16 +163,63 @@ plt.show()
 # ====================================================
 # GRAD
 
-step = 1
+steps = [1, 3, 10, 30, 100]
 
+for step in steps:
+    expected_rewards = []
+    agent = Agent()
+    expected_rewards.append(agent.grad_run(bandit, step=step))
+
+    plt.plot([i for i in range(ITERS)], expected_rewards[0], label=f'step={step}')
+plt.legend()
+plt.title('Boltzmann')
+plt.xlabel('Iteration')
+plt.ylabel('Expected reward')
+plt.show()
+
+# ====================================================
+# BEST
+
+eps = 0.1
+expected_rewards = []
 for i in range(NUM_RUNS):
     agent = Agent()
-    temp_for_avg.append(agent.grad_run(bandit, step=step))
+    temp_for_avg.append(agent.eps_greedy_run(bandit, eps))
 
 expected_rewards = np.mean(temp_for_avg, axis=0)
 
-plt.plot([i for i in range(ITERS)], expected_rewards)
-plt.title(f'Grad with {step}')
+plt.plot([i for i in range(ITERS)], expected_rewards,
+         label=f'Eps-greedy with eps={eps}')
+
+
+initialization = 10
+expected_rewards = []
+agent = Agent(initialization=initialization)
+expected_rewards.append(agent.eps_greedy_run(bandit, eps=0))
+
+plt.plot([i for i in range(ITERS)], expected_rewards[0],
+         label=f'Optimistic initialization with {initialization}')
+
+
+c = 2
+expected_rewards = []
+expected_rewards = []
+agent = Agent()
+expected_rewards.append(agent.ucb_run(bandit, c=c))
+
+plt.plot([i for i in range(ITERS)], expected_rewards[0],
+         label=f'UCB with c={c}')
+
+step = 3
+expected_rewards = []
+agent = Agent()
+expected_rewards.append(agent.grad_run(bandit, step=step))
+
+plt.plot([i for i in range(ITERS)], expected_rewards[0],
+         label=f'Boltzmann with step={step}')
+
+plt.legend()
+plt.title('Best')
 plt.xlabel('Iteration')
 plt.ylabel('Expected reward')
 plt.show()
