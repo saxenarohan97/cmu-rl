@@ -20,9 +20,9 @@ class Bandit:
     
 
 class Agent:
-    def __init__(self, initialization=0):
+    def __init__(self, initialization=0, n_init=0):
         self.estimated_avg = np.zeros(10) + initialization
-        self.pull_n = np.zeros(10)
+        self.pull_n = np.zeros(10) + n_init
         
         self.action_pref = np.zeros(10)
     
@@ -44,7 +44,7 @@ class Agent:
         self.pull_and_update(action, bandit)
         
         expected_reward = eps / 10 * np.sum(bandit.avg_rew) \
-                            + (1 - eps) * bandit.avg_rew[action]
+                            + (1 - eps) * bandit.avg_rew[np.argmax(self.estimated_avg)]
         
         return expected_reward
     
@@ -135,7 +135,7 @@ initializations = [0, 1, 2, 5, 10]
 
 for initialization in initializations:
     for i in range(NUM_RUNS):
-        agent = Agent(initialization=initialization)
+        agent = Agent(initialization=initialization, n_init=1)
         temp_for_avg.append(agent.eps_greedy_run(bandit, eps=0))
     expected_rewards = np.mean(temp_for_avg, axis=0)
 
@@ -154,7 +154,7 @@ cs = [0, 1, 2, 5]
 
 for c in cs:
     for i in range(NUM_RUNS):
-        agent = Agent(initialization=1)
+        agent = Agent()
         temp_for_avg.append(agent.ucb_run(bandit, c=c))
     expected_rewards = np.mean(temp_for_avg, axis=0)
 
@@ -199,7 +199,7 @@ plt.plot([i for i in range(ITERS)], expected_rewards,
 temp_for_avg=[]
 initialization = 10
 for i in range(NUM_RUNS):
-    agent = Agent(initialization=initialization)
+    agent = Agent(initialization=initialization, n_init=1)
     temp_for_avg.append(agent.eps_greedy_run(bandit, eps=0))
 expected_rewards = np.mean(temp_for_avg, axis=0)
 plt.plot([i for i in range(ITERS)], expected_rewards,
@@ -208,7 +208,7 @@ plt.plot([i for i in range(ITERS)], expected_rewards,
 temp_for_avg=[]
 c = 2
 for i in range(NUM_RUNS):
-    agent = Agent(initialization=1)
+    agent = Agent()
     temp_for_avg.append(agent.ucb_run(bandit, c=c))
 expected_rewards = np.mean(temp_for_avg, axis=0)
 plt.plot([i for i in range(ITERS)], expected_rewards,
