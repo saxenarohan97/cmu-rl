@@ -43,7 +43,7 @@ class Agent:
         
         self.pull_and_update(action, bandit)
         
-        expected_reward = eps / 10 * np.sum(bandit.avg_rew) \
+        expected_reward = eps * np.mean(bandit.avg_rew) \
                             + (1 - eps) * bandit.avg_rew[np.argmax(self.estimated_avg)]
         
         return expected_reward
@@ -110,10 +110,11 @@ bandit = Bandit()
 # EPSILON GREEDY
 
 
-temp_for_avg = []
+
 epss = [0, 0.001, 0.01, 0.1, 1]
 
 for eps in epss:
+    temp_for_avg = []
     for i in range(NUM_RUNS):
         agent = Agent()
         temp_for_avg.append(agent.eps_greedy_run(bandit, eps))
@@ -130,10 +131,11 @@ plt.show()
 # ====================================================
 # OPTIMISTIC INITIALIZATION
 
-temp_for_avg = []
+
 initializations = [0, 1, 2, 5, 10]
 
 for initialization in initializations:
+    temp_for_avg = []
     for i in range(NUM_RUNS):
         agent = Agent(initialization=initialization, n_init=1)
         temp_for_avg.append(agent.eps_greedy_run(bandit, eps=0))
@@ -149,10 +151,11 @@ plt.show()
 # ====================================================
 # UCB
 
-temp_for_avg = []
+
 cs = [0, 1, 2, 5]
 
 for c in cs:
+    temp_for_avg = []
     for i in range(NUM_RUNS):
         agent = Agent()
         temp_for_avg.append(agent.ucb_run(bandit, c=c))
@@ -167,10 +170,11 @@ plt.show()
 
 # ====================================================
 # GRAD
-temp_for_avg = []
+
 temps = [1, 3, 10, 30, 100]
 
 for temp in temps:
+    temp_for_avg = []
     for i in range(NUM_RUNS):
         agent = Agent()
         temp_for_avg.append(agent.grad_run(bandit, temp=temp))
