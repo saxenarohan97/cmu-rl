@@ -71,27 +71,35 @@ def print_model_info(env, state, action):
 
 def main():
     # create the environment
-    env = gym.make('Deterministic-4x4-FrozenLake-v0')
+    env = gym.make('Deterministic-8x8-FrozenLake-v0')
 
     print_env_info(env)
     # print_model_info(env, 0, lake_env.DOWN)
     # print_model_info(env, 1, lake_env.DOWN)
     # print_model_info(env, 14, lake_env.RIGHT)
     
+    improv_li = []
+    value_li = []
+    iters_li = []
+    for i in range(10):
     
-    # policy, value_func, num_improv_iter, total_value_iter = policy_iteration_sync(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
-    # policy, value_func, num_improv_iter, total_value_iter = policy_iteration_async_ordered(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
-    # policy, value_func, num_improv_iter, total_value_iter = policy_iteration_async_randperm(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
+        # policy, value_func, num_improv_iter, total_value_iter = policy_iteration_sync(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
+        # policy, value_func, num_improv_iter, total_value_iter = policy_iteration_async_ordered(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
+        policy, value_func, num_improv_iter, total_value_iter = policy_iteration_async_randperm(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
+        
+        improv_li.append(num_improv_iter)
+        value_li.append(total_value_iter)
+        
+        # policy, value_func, num_iters = value_iteration_sync(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
+        # policy, value_func, num_iters = value_iteration_async_ordered(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
+        # policy, value_func, num_iters = value_iteration_async_randperm(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
+        # policy, value_func, num_iters = value_iteration_async_custom(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
+        # iters_li.append(num_iters)
+        
+    print(f'Improvement steps: {np.mean(improv_li)}.')
+    print(f'Value steps: {np.mean(value_li)}.')
     
-    # print(f'Improvement steps: {num_improv_iter}.')
-    # print(f'Value steps: {total_value_iter}.')
-    
-    # policy, value_func, num_iters = value_iteration_sync(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
-    # policy, value_func, num_iters = value_iteration_async_ordered(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
-    # policy, value_func, num_iters = value_iteration_async_randperm(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
-    # policy, value_func, num_iters = value_iteration_async_custom(env, gamma=0.9, max_iterations=int(1e3), tol=1e-3)
-    
-    print(f'Number of iterations: {num_iters}.')
+    # print(f'Number of iterations: {np.mean(iters_li)}.')
     
     
     value_func_heatmap(env, value_func)
