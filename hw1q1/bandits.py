@@ -69,7 +69,6 @@ class Agent:
         self.pull_and_update(action, bandit)
         
         expected_reward = bandit.avg_rew[action]
-        
         return expected_reward
     
     def ucb_run(self, bandit, c=1, iters=ITERS):
@@ -82,16 +81,14 @@ class Agent:
         return expected_rewards
     
     def grad_step(self, bandit, temp, step=0.1):
-        self.probs = np.exp(self.action_pref / temp) \
-                        / np.sum(np.exp(self.action_pref / temp))
+        self.probs = np.exp(self.estimated_avg * temp) \
+                        / np.sum(np.exp(self.estimated_avg * temp))
         action = np.random.choice(np.arange(0, 10), p=self.probs)
         rew = self.pull_and_update(action, bandit)
         
         baseline_rew = np.mean(self.estimated_avg)
         
-        self.action_pref += step * (rew - baseline_rew) \
-                            * ((np.array([i for i in range(10)]) == action) 
-                               - self.probs)
+        
         expected_reward = np.sum(bandit.avg_rew * self.probs)
         return expected_reward         
         
@@ -219,7 +216,7 @@ plt.plot([i for i in range(ITERS)], expected_rewards,
          label=f'UCB with c={c}')
 
 temp_for_avg=[]
-temp = 1
+temp = 3
 for i in range(NUM_RUNS):
     agent = Agent()
     temp_for_avg.append(agent.grad_run(bandit, temp=temp))
