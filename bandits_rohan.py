@@ -27,7 +27,7 @@ class Testbed:
         self.n[action] += 1
         self.q[action] += (reward - self.q[action]) / self.n[action]
         avg_reward = epsilon / self.arms * np.sum(self.mean_rewards) \
-                        + (1. - epsilon) * self.mean_rewards[np.argmax(self.q)]
+                        + (1. - epsilon) * self.mean_rewards[action]
         return avg_reward
 
 
@@ -61,15 +61,40 @@ def ucb(c, arms=10, max_iters=1000, total_runs=20):
 
         for iter in range(max_iters):
             if 0 in test.n:
-                found = False
-                while not found:
-                    action = np.random.randint(0, arms)
-                    if test.n[action] == 0:
-                        found = True
+                # found = False
+                # while not found:
+                #     action = np.random.randint(0, arms)
+                #     if test.n[action] == 0:
+                #         found = True
+                action = np.where(test.n == 0)[0][0]
             else:
                 t = np.sum(test.n)
                 action = np.argmax(test.q + c * np.sqrt(np.log(t) / test.n))
             avg_reward = test.pull_and_update(action, 0.)
+            run_rewards.append(avg_reward)
+        
+        all_rewards.append(run_rewards)
+    
+    return np.mean(all_rewards, axis=0)
+
+
+def boltzmann(T, arms=10, max_iters=1000, total_runs=20):
+
+    all_rewards = []
+
+    for run in range(total_runs):
+        test = Testbed(arms)
+        run_rewards = []
+
+        for iter in range(max_iters):
+            probs = np.exp(test.q * T) / np.sum(np.exp(test.q * T))
+            action = np.random.choice(list(range(arms)), p=probs)
+            # avg_reward = test.pull_and_update(action, 0.)
+
+            reward = test.bandits[action].pull_arm()
+            test.n[action] += 1
+            test.q[action] += (reward - test.q[action]) / test.n[action]
+            avg_reward = np.sum(probs * test.mean_rewards)
             run_rewards.append(avg_reward)
         
         all_rewards.append(run_rewards)
@@ -113,5 +138,20 @@ def q3():
     plt.show()
 
 
+def q4():
+
+    ts = [1., 3., 10., 30., 100.]
+
+    for t in ts:
+        rewards = boltzmann(t)
+        plt.plot(list(range(1, 1001)), rewards, label='t = {}'.format(t))
+    
+    plt.legend()
+    plt.show()
+
+
 if __name__ == '__main__':
-    q3()
+    # q1()
+    # q2()
+    # q3()
+    q4()
