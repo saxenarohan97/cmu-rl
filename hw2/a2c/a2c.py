@@ -73,10 +73,8 @@ class Reinforce(object):
     def train(self, env, gamma=0.99):
         self.policy_optim.zero_grad()
         states, actions, rewards, probs = self.generate_episode(env)
-
         returns = compute_returns(gamma, rewards)
         prob_actions = probs[range(len(probs)), actions]
-
         loss = - torch.mean(returns * torch.log(prob_actions))
         loss.backward()
         self.policy_optim.step()
@@ -97,6 +95,14 @@ class Baseline(Reinforce):
         states, actions, rewards, probs = self.generate_episode(env)
         returns = compute_returns(gamma, rewards)
         prob_actions = probs[range(len(probs)), actions]
+        baselines = self.baseline(torch.cuda.FloatTensor(states))
+        policy_loss = - torch.mean((returns - baselines.detach()) * torch.log(prob_actions))
+        baseline_loss = torch.mean((returns - baselines) ** 2.)
+        policy_loss.backward()
+        baseline_loss.backward()
+        self.policy_optim.step()
+        self.baseline_optim.step()
+
 
 class A2C(object):
     # Implementation of N-step Advantage Actor Critic.
