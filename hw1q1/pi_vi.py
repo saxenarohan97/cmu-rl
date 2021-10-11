@@ -413,79 +413,153 @@ def value_iteration_sync(env, gamma, max_iterations=int(1e3), tol=1e-3):
 
 
 def value_iteration_async_ordered(env, gamma, max_iterations=int(1e3), tol=1e-3):
-		"""Runs value iteration for a given gamma and environment.
-		Updates states in their 1-N order.
+	"""Runs value iteration for a given gamma and environment.
+	Updates states in their 1-N order.
 
-		Parameters
-		----------
-		env: gym.core.Environment
-			The environment to compute value iteration for. Must have nS,
-			nA, and P as attributes.
-		gamma: float
-			Discount factor, must be in range [0, 1)
-		max_iterations: int
-			The maximum number of iterations to run before stopping.
-		tol: float
-			Determines when value function has converged.
+	Parameters
+	----------
+	env: gym.core.Environment
+		The environment to compute value iteration for. Must have nS,
+		nA, and P as attributes.
+	gamma: float
+		Discount factor, must be in range [0, 1)
+	max_iterations: int
+		The maximum number of iterations to run before stopping.
+	tol: float
+		Determines when value function has converged.
 
-		Returns
-		-------
-		np.ndarray, iteration
-			The value function and the number of iterations it took to converge.
-		"""
-		value_func = np.zeros(env.nS)  # initialize value function
-		return value_func, 0
+	Returns
+	-------
+	np.ndarray, iteration
+		The value function and the number of iterations it took to converge.
+	"""
+	value_func = np.zeros(env.nS)  # initialize value function
+	num_iters = 0
+
+	while num_iters < max_iterations:
+		delta = 0
+
+		for state in range(env.nS):
+			action_values = []
+			for action in range(env.nA):
+				prob, nextstate, reward, is_terminal = env.P[state][action][0]
+				action_values.append(reward + gamma * value_func[nextstate])
+
+			old_value = value_func[state]
+			value_func[state] = max(action_values)
+			delta = max(delta, abs(old_value - value_func[state]))
+
+		num_iters += 1
+
+		if delta < tol:
+			break
+
+	return value_func, num_iters
 
 
 def value_iteration_async_randperm(env, gamma, max_iterations=int(1e3),
 																	 tol=1e-3):
-		"""Runs value iteration for a given gamma and environment.
-		Updates states by randomly sampling index order permutations.
+	"""Runs value iteration for a given gamma and environment.
+	Updates states by randomly sampling index order permutations.
 
-		Parameters
-		----------
-		env: gym.core.Environment
-			The environment to compute value iteration for. Must have nS,
-			nA, and P as attributes.
-		gamma: float
-			Discount factor, must be in range [0, 1)
-		max_iterations: int
-			The maximum number of iterations to run before stopping.
-		tol: float
-			Determines when value function has converged.
+	Parameters
+	----------
+	env: gym.core.Environment
+		The environment to compute value iteration for. Must have nS,
+		nA, and P as attributes.
+	gamma: float
+		Discount factor, must be in range [0, 1)
+	max_iterations: int
+		The maximum number of iterations to run before stopping.
+	tol: float
+		Determines when value function has converged.
 
-		Returns
-		-------
-		np.ndarray, iteration
-			The value function and the number of iterations it took to converge.
-		"""
-		value_func = np.zeros(env.nS)  # initialize value function
-		return value_func, 0
+	Returns
+	-------
+	np.ndarray, iteration
+		The value function and the number of iterations it took to converge.
+	"""
+	value_func = np.zeros(env.nS)  # initialize value function
+	num_iters = 0
+
+	while num_iters < max_iterations:
+		delta = 0
+
+		for state in np.random.permutation(range(env.nS)):
+			action_values = []
+			for action in range(env.nA):
+				prob, nextstate, reward, is_terminal = env.P[state][action][0]
+				action_values.append(reward + gamma * value_func[nextstate])
+
+			old_value = value_func[state]
+			value_func[state] = max(action_values)
+			delta = max(delta, abs(old_value - value_func[state]))
+
+		num_iters += 1
+
+		if delta < tol:
+			break
+
+	return value_func, num_iters
 
 
 def value_iteration_async_custom(env, gamma, max_iterations=int(1e3), tol=1e-3):
-		"""Runs value iteration for a given gamma and environment.
-		Updates states by student-defined heuristic.
+	"""Runs value iteration for a given gamma and environment.
+	Updates states by student-defined heuristic.
 
-		Parameters
-		----------
-		env: gym.core.Environment
-			The environment to compute value iteration for. Must have nS,
-			nA, and P as attributes.
-		gamma: float
-			Discount factor, must be in range [0, 1)
-		max_iterations: int
-			The maximum number of iterations to run before stopping.
-		tol: float
-			Determines when value function has converged.
+	Parameters
+	----------
+	env: gym.core.Environment
+		The environment to compute value iteration for. Must have nS,
+		nA, and P as attributes.
+	gamma: float
+		Discount factor, must be in range [0, 1)
+	max_iterations: int
+		The maximum number of iterations to run before stopping.
+	tol: float
+		Determines when value function has converged.
 
-		Returns
-		-------
-		np.ndarray, iteration
-			The value function and the number of iterations it took to converge.
-		"""
-		value_func = np.zeros(env.nS)  # initialize value function
-		return value_func, 0
+	Returns
+	-------
+	np.ndarray, iteration
+		The value function and the number of iterations it took to converge.
+	"""
+	value_func = np.zeros(env.nS)  # initialize value function
+
+	if env.nS == 16:
+		grid_len = 4
+		goal = np.array([1, 1])
+	
+	elif env.nS == 64:
+		grid_len = 8
+		goal = np.array([1, 7])
+
+	distances = np.indices([grid_len, grid_len]).T
+	distances -= goal
+	distances = np.sum(np.abs(distances), axis=-1)
+	states = np.argsort(distances.flatten())
+
+	num_iters = 0
+
+	while num_iters < max_iterations:
+		delta = 0
+
+		for state in states:
+			action_values = []
+			for action in range(env.nA):
+				prob, nextstate, reward, is_terminal = env.P[state][action][0]
+				action_values.append(reward + gamma * value_func[nextstate])
+
+			old_value = value_func[state]
+			value_func[state] = max(action_values)
+			delta = max(delta, abs(old_value - value_func[state]))
+
+		num_iters += 1
+
+		if delta < tol:
+			break
+
+	return value_func, num_iters
 
 
 ######################
@@ -589,7 +663,7 @@ def q1_3(gamma):
 
 	for env_name in envs:
 		env = gym.make(env_name)
-		value_func, num_iters = value_iteration_sync(env, gamma, max_iterations=1e10)
+		value_func, num_iters = value_iteration_sync(env, gamma)
 		print(env_name + ':')
 		print('Number of iterations = {}'.format(num_iters))
 		value_func_heatmap(env, value_func)
@@ -611,7 +685,6 @@ def q1_3(gamma):
 	plt.show()
 		
 
-
 def q1_4(gamma):
 	env = gym.make('Deterministic-8x8-FrozenLake-v0')
 
@@ -625,13 +698,41 @@ def q1_4(gamma):
 	randperm_improv_iter = []
 	randperm_value_iter = []
 	for i in range(10):
-		policy, value_func, num_improv_iter, num_value_iter = policy_iteration_async_ordered(env, gamma)
+		policy, value_func, num_improv_iter, num_value_iter = policy_iteration_async_randperm(env, gamma)
 		randperm_improv_iter.append(num_improv_iter)
 		randperm_value_iter.append(num_value_iter)
 	
 	print('10 trials of async_randperm:')
 	print('Policy improvement steps: {}'.format(np.mean(randperm_improv_iter)))
 	print('Total policy evaluation steps: {}\n'.format(np.mean(randperm_value_iter)))
+
+
+def q1_5_1(gamma):
+	env = gym.make('Deterministic-8x8-FrozenLake-v0')
+
+	# One trial for async_ordered heuristic
+	value_func, num_iters = value_iteration_async_ordered(env, gamma)
+	print('1 trial of async_ordered:')
+	print('Number of iterations: {}\n'.format(num_iters))
+
+	# Ten trials for async_randperm heuristic
+	randperm_num_iters = []
+	for i in range(10):
+		value_func, num_iters = value_iteration_async_randperm(env, gamma)
+		randperm_num_iters.append(num_iters)
+	
+	print('10 trials of async_randperm:')
+	print('Number of iterations: {}\n'.format(np.mean(randperm_num_iters)))
+
+
+def q1_5_2(gamma):
+	envs = ['Deterministic-4x4-FrozenLake-v0', 'Deterministic-8x8-FrozenLake-v0']
+
+	for env_name in envs:
+		env = gym.make(env_name)
+		value_func, num_iters = value_iteration_async_custom(env, gamma)
+		print(env_name + ':')
+		print('Number of iterations = {}'.format(num_iters))
 
 
 if __name__ == "__main__":
@@ -643,3 +744,7 @@ if __name__ == "__main__":
 	# q1_3(gamma)
 
 	# q1_4(gamma)
+
+	# q1_5_1(gamma)
+
+	q1_5_2(gamma)
