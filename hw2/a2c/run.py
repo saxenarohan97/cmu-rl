@@ -92,8 +92,6 @@ def main_a2c(args):
                 reward_means.append(reward_mean)
         res[i] = np.array(reward_means)
 
-        A2C_net.evaluate_policy(env, True, True)
-
 
     ks = np.arange(l)*100
     avs = np.mean(res, axis=0)
