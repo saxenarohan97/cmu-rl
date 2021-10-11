@@ -104,7 +104,7 @@ class Baseline(Reinforce):
         self.baseline_optim.step()
 
 
-class A2C(object):
+class A2C(Reinforce):
     # Implementation of N-step Advantage Actor Critic.
     # This class inherits the Reinforce class, so for example, you can reuse
     # generate_episode() here for different methods.
