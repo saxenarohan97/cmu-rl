@@ -6,7 +6,7 @@ os.environ['OMP_NUM_THREADS'] = '1'
 
 import gym
 
-from a2c import A2C, Reinforce
+from a2c import A2C, Reinforce, Baseline
 from net import NeuralNet
 
 import numpy as np
@@ -73,9 +73,19 @@ def main_a2c(args):
         reward_means = []
 
         # TODO: create networks and setup reinforce/a2c
-        A2C_net = Reinforce(NeuralNet(*env.observation_space._shape, nA, torch.nn.Softmax()),
-                            lr)
+
+        # REINFORCE
+        # A2C_net = Reinforce(NeuralNet(*env.observation_space._shape, nA, torch.nn.Softmax()),
+        #                     lr)
+        # A2C_net.policy = A2C_net.policy.cuda()
+
+        # REINFORCE with baseline
+        A2C_net = Baseline(NeuralNet(*env.observation_space._shape, nA, torch.nn.Softmax()),
+                           lr,
+                           NeuralNet(*env.observation_space._shape, 1, torch.nn.Identity()),
+                           baseline_lr)
         A2C_net.policy = A2C_net.policy.cuda()
+        A2C_net.baseline = A2C_net.baseline.cuda()
 
         for m in range(num_episodes):
             A2C_net.train(env, gamma=gamma)
