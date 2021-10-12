@@ -36,7 +36,8 @@ class Reinforce(object):
                 env.render()
                 if delay:
                     time.sleep(0.1)
-            prob = self.policy(torch.cuda.FloatTensor(state))
+            with torch.no_grad():
+                prob = self.policy(torch.cuda.FloatTensor(state))
             action = sample_action(env, prob.cpu().detach().numpy())
             state, reward, done, info = env.step(action)
             total_reward += reward
@@ -109,29 +110,50 @@ class A2C(Reinforce):
     # This class inherits the Reinforce class, so for example, you can reuse
     # generate_episode() here for different methods.
 
-    def __init__(self, actor, actor_lr, N, nA, critic, critic_lr, baseline=False, a2c=True):
+    def __init__(self, actor, actor_lr, N, critic, critic_lr):
         # Note: baseline is true if we use reinforce with baseline
         #       a2c is true if we use a2c else reinforce
-        # TODO: Initializes A2C.
-        self.type = None  # Pick one of: "A2C", "Baseline", "Reinforce"
-        assert self.type is not None
-        pass
+        super(A2C, self).__init__(actor, actor_lr)
+        self.type = 'A2C'  # Pick one of: "A2C", "Baseline", "Reinforce"
+        self.N = N
+        self.critic = critic
+        self.critic_optim = torch.optim.Adam(critic.parameters(), critic_lr)
 
-    def evaluate_policy(self, env):
-        # TODO: Compute Accumulative trajectory reward(set a trajectory length threshold if you want)
-        pass
-
-    def generate_episode(self, env, render=False):
-        # Generates an episode by executing the current policy in the given env.
-        # Returns:
-        # - a list of states, indexed by time step
-        # - a list of actions, indexed by time step
-        # - a list of rewards, indexed by time step
-        # TODO: Implement this method.
-        pass
 
     def train(self, env, gamma=0.99, n=10):
         # Trains the model on a single episode using REINFORCE or A2C/A3C.
-        # TODO: Implement this method. It may be helpful to call the class
-        #       method generate_episode() to generate training data.
-        pass
+        # Implement this method. It may be helpful to call the class
+        # method generate_episode() to generate training data.
+        self.policy_optim.zero_grad()
+        self.critic_optim.zero_grad()
+        states, actions, rewards, probs = self.generate_episode(env)
+
+        T = len(states)
+        states = np.array(states)
+        values = self.critic(torch.cuda.FloatTensor(states))
+
+        if self.N >= T:
+            v_ends = 0.
+        else:
+            next_states = np.arange(self.N, T)
+            v_ends = values[next_states]
+            v_ends = torch.squeeze(v_ends, dim=-1)
+            v_ends = torch.cat([v_ends, torch.cuda.FloatTensor([0. for _ in range(self.N)])])
+        
+        gammas = np.array([gamma ** i for i in range(self.N)])
+        returns = np.array([np.sum(gammas[:min(t + self.N, T) - t] * rewards[t : min(t + self.N, T)]) for t in range(T)])
+
+        if type(v_ends) is float:
+            v_ends_value = v_ends
+        
+        else:
+            v_ends_value = v_ends.detach()
+            returns = torch.cuda.FloatTensor(returns) + (gamma ** self.N) * v_ends_value
+            critic_loss = torch.mean((torch.cuda.FloatTensor(returns) - values) ** 2.)
+            critic_loss.backward()
+            self.critic_optim.step()
+        
+        prob_actions = probs[range(len(probs)), actions]
+        policy_loss = - torch.mean((torch.cuda.FloatTensor(returns) - values.detach()) * torch.log(prob_actions))
+        policy_loss.backward()
+        self.policy_optim.step()
