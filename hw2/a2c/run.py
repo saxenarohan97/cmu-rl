@@ -80,12 +80,21 @@ def main_a2c(args):
         # A2C_net.policy = A2C_net.policy.cuda()
 
         # REINFORCE with baseline
-        A2C_net = Baseline(NeuralNet(*env.observation_space._shape, nA, torch.nn.Softmax()),
+        # A2C_net = Baseline(NeuralNet(*env.observation_space._shape, nA, torch.nn.Softmax()),
+        #                    lr,
+        #                    NeuralNet(*env.observation_space._shape, 1, torch.nn.Identity()),
+        #                    baseline_lr)
+        # A2C_net.policy = A2C_net.policy.cuda()
+        # A2C_net.baseline = A2C_net.baseline.cuda()
+
+        # Advantage Actor-Critic
+        A2C_net = A2C(NeuralNet(*env.observation_space._shape, nA, torch.nn.Softmax()),
                            lr,
+                           args.n,
                            NeuralNet(*env.observation_space._shape, 1, torch.nn.Identity()),
-                           baseline_lr)
+                           critic_lr)
         A2C_net.policy = A2C_net.policy.cuda()
-        A2C_net.baseline = A2C_net.baseline.cuda()
+        A2C_net.critic = A2C_net.critic.cuda()
 
         for m in range(num_episodes):
             A2C_net.train(env, gamma=gamma)
