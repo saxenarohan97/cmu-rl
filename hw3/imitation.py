@@ -38,6 +38,8 @@ def generate_episode(env, policy):
         labels.
     rewards: the reward received by the agent at each step.
     """
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
     done = False
     state = env.reset()
 
@@ -48,7 +50,7 @@ def generate_episode(env, policy):
         # WRITE CODE HERE
         states.append(state)
         with torch.no_grad():
-            action = np.argmax(policy(torch.Tensor(state)).detach().numpy())
+            action = np.argmax(policy(torch.Tensor(state).to(device)).detach().cpu().numpy())
         actions.append(action)
         state, reward, done, _ = env.step(action)
         rewards.append(reward)
