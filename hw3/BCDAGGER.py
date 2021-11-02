@@ -76,20 +76,20 @@ def plot_student_vs_expert(mode, expert_file, keys=[100], num_seeds=1, num_itera
 		generate_imitation_results(mode, expert_file, keys, num_seeds, num_iterations)
 
 	# Plot the results
-	fig, (ax1, ax2, ax3) = plt.subplots(3,1, sharex=True, figsize=(12, 9))
+	fig, (ax1, ax2, ax3) = plt.subplots(3,1, sharex='row', figsize=(12, 9))
 	# WRITE CODE HERE
 
 	ax1.plot([i for i in range(num_iterations)], [expert_reward] * num_iterations, label='expert')
 	ax1.plot([i for i in range(num_iterations)], reward_data[keys[0]][0], label='imitation')
 	ax1.legend()
 	ax1.set_title("Reward")
-	ax1.set_xlabel('iteraton')
 
 	ax2.plot([i for i in range(num_iterations)], acc_data[keys[0]][0])
 	ax2.set_title("Accuracy")
 
 	ax3.plot([i for i in range(num_iterations)], loss_data[keys[0]][0])
 	ax3.set_title("Loss")
+	ax3.set_xlabel('iteraton')
 	# END
 	plt.savefig('p2_student_vs_expert_%s.png' % mode, dpi=300)
 
@@ -98,13 +98,29 @@ def plot_student_vs_expert(mode, expert_file, keys=[100], num_seeds=1, num_itera
 """Plot the reward, loss, and accuracy for each, remembering to label each line."""
 def plot_compare_num_episodes(mode, expert_file, keys, num_seeds=1, num_iterations=100):
 	s0 = time.time()
-	reward_data, accuracy_data, loss_data, _ = \
+	reward_data, acc_data, loss_data, expert_reward = \
 		generate_imitation_results(mode, expert_file, keys, num_seeds, num_iterations)
 	
 	# Plot the results
-	plt.figure(figsize=(12, 4))
+	fig, (ax1, ax2, ax3) = plt.subplots(3,1, sharex='row', figsize=(12, 9))
 	# WRITE CODE HERE
 
+	ax1.plot([i for i in range(num_iterations)], [expert_reward] * num_iterations, label='expert')
+		
+	for k in keys:
+		ax1.plot([i for i in range(num_iterations)], np.mean(reward_data[k], axis=0), label=f'imitation, key={k}')
+		
+		ax2.plot([i for i in range(num_iterations)], np.mean(acc_data[k], axis=0), label=f'key={k}')
+		
+		ax3.plot([i for i in range(num_iterations)], np.mean(loss_data[k], axis=0), label=f'key={k}')
+	
+	ax1.legend()
+	ax2.legend()
+	ax3.legend()
+	ax1.set_title("Reward")
+	ax2.set_title("Accuracy")
+	ax3.set_title("Loss")
+	ax3.set_xlabel('iteraton')
 	# END
 	plt.savefig('p1_expert_data_%s.png' % mode, dpi=300)
 	# plt.show()
@@ -121,13 +137,13 @@ def main():
 	# expert_file = 'expert_tf.h5'
 	
 	# Switch mode
-	mode = 'behavior cloning'
-	# mode = 'dagger'
+	# mode = 'behavior cloning'
+	mode = 'dagger'
 
 	# Change the list of num_episodes below for testing and different tasks
-	keys = [1] # [1, 10, 50, 100]
+	keys = [1, 10] # [1, 10, 50, 100]
 	num_seeds = 3 # 3
-	num_iterations = 100    # Number of training iterations. Use a small number
+	num_iterations = 10    # Number of training iterations. Use a small number
 							# (e.g., 10) for debugging, and then try a larger number
 							# (e.g., 100).
 
