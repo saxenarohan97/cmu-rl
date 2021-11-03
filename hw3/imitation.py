@@ -105,7 +105,8 @@ class Imitation():
         new_train_actions = []
         for _ in range(self.num_episodes):
             states, _, _ = generate_episode(self.env, self.model)
-            actions = [np.argmax(self.expert(torch.Tensor(state)).detach().numpy()) for state in states]
+            actions = [np.argmax(self.expert(torch.Tensor(state).to(self.device)).detach().cpu().numpy())
+                        for state in states]
             new_train_states.extend(states)
             new_train_actions.extend(actions)
 
@@ -129,8 +130,8 @@ class Imitation():
         """
         # WRITE CODE HERE
 
-        tensor_x = torch.Tensor(self._train_states).to(self.device)
-        tensor_y = torch.Tensor(self._train_actions).to(self.device)
+        tensor_x = torch.Tensor(self._train_states)
+        tensor_y = torch.Tensor(self._train_actions)
 
         trainset = torch.utils.data.TensorDataset(tensor_x, tensor_y)
         trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
@@ -139,7 +140,8 @@ class Imitation():
         for epoch in range(num_epochs):
             for data in trainloader:
                 inputs, labels = data
-                labels = labels.long()
+                inputs = inputs.to(self.device)
+                labels = labels.long().to(self.device)
                 # zero the parameter gradients
                 self.optimizer.zero_grad()
                 # forward + backward + optimize
@@ -155,6 +157,8 @@ class Imitation():
         with torch.no_grad():
             for data in trainloader:
                 states, labels = data
+                states = states.to(self.device)
+                labels = labels.long().to(self.device)
                 # calculate outputs by running images through the network
                 outputs = self.model(states)
                 # the class with the highest energy is what we choose as prediction
