@@ -166,7 +166,7 @@ class Imitation():
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
         acc = 100 * correct / total
-        return loss, acc
+        return loss.detach().cpu(), acc.detach().cpu()
 
 
     def evaluate(self, policy, n_episodes=50):
