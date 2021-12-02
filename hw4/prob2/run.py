@@ -272,5 +272,5 @@ if __name__ == "__main__":
     device = torch.device('cuda:%d' % gpu_number if torch.cuda.is_available() else 'cpu')
 
     # test_cem_gt_dynamics(50)    # Q2.1
-    train_single_dynamics(50, device=device)   # Q2.2
-    # train_pets(device=device)  # Q2.3
+    # train_single_dynamics(50, device=device)   # Q2.2
+    train_pets(device=device)  # Q2.3
