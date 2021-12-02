@@ -61,6 +61,7 @@ class PENN(nn.Module):
 
     def get_loss(self, targ, mean, logvar):
         # TODO: write your code here
+        # [(mean - target) / exp(logvar)] * (mean - target)
 
         return torch.sum((mean - targ) ** 2 / torch.exp(logvar)) + logvar.sum()
 
@@ -80,13 +81,13 @@ class PENN(nn.Module):
         """
         # TODO: write your code here
 
-        total_loss = 0.
+        total_losses = []
 
-        for n in range(self.num_nets):
-            network = self.networks[n]
-            
-            for _ in range(num_train_itrs):
-                
+        for _ in range(num_train_itrs):
+            avg_loss_per_iter = 0.
+
+            for n in range(self.num_nets):
+                network = self.networks[n]                
                 random_choices = np.random.randint(inputs.shape[0], size=batch_size)
 
                 input_sample = inputs[random_choices, :]
@@ -100,8 +101,11 @@ class PENN(nn.Module):
                 self.opt.zero_grad()
                 means, logvars = self.get_output(network(input_sample))
                 loss = self.get_loss(target_sample, means, logvars)
-                total_loss += loss.cpu().detach()
+                avg_loss_per_iter += loss.cpu().detach()
                 loss.backward()
                 self.opt.step()
+            
+            avg_loss_per_iter /= self.num_nets
+            total_losses.append(avg_loss_per_iter)
 
-        return total_loss, None
+        return total_losses, None
