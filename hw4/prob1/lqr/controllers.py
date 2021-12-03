@@ -28,7 +28,8 @@ def simulate_dynamics(env, x, u, dt=1e-5):
       your LQR controller.
     """
     # ___ WRITE CODE HERE ___
-
+    env.state = np.copy(x)
+    xdot = (env.step(u, dt)[0]  - x) / dt
     # ^^^ WRITE CODE HERE ^^^
     return xdot
 
@@ -59,7 +60,14 @@ def approximate_A(env, x, u, delta=1e-5, dt=1e-5):
     """
     # ___ WRITE CODE HERE ___
     A = np.zeros((x.shape[0], x.shape[0]))
-
+    for i in range(len(x)):
+      x_pert_plus = np.copy(x)
+      x_pert_plus[i] += delta
+      x_pert_minus = np.copy(x)
+      x_pert_minus[i] -= delta
+      df_xi = (simulate_dynamics(env, x_pert_plus, u, dt)
+                - simulate_dynamics(env, x_pert_minus, u, dt)) / 2 / delta
+      A[:,i] = np.copy(df_xi)
     # ^^^ WRITE CODE HERE ^^^
     return A
 
@@ -89,7 +97,14 @@ def approximate_B(env, x, u, delta=1e-5, dt=1e-5):
     """
     # ___ WRITE CODE HERE ___
     B = np.zeros((x.shape[0], u.shape[0]))
-
+    for i in range(len(u)):
+      u_pert_plus = np.copy(u)
+      u_pert_plus[i] += delta
+      u_pert_minus = np.copy(u)
+      u_pert_minus[i] -= delta
+      df_ui = (simulate_dynamics(env, x, u_pert_plus, dt)
+                - simulate_dynamics(env, x, u_pert_minus, dt)) / 2 / delta
+      B[:,i] = np.copy(df_ui)
     # ^^^ WRITE CODE HERE ^^^
     return B
 
@@ -118,6 +133,14 @@ def calc_lqr_input(env, sim_env):
     # ___ WRITE CODE HERE ___
     # approximate the dynamics for current state x, not x-x*!
     # x-x* is only used to generate the optimal control u!
-
-
+    Q = env.Q
+    R = env.R
+    x = env.state
+    u = np.zeros(env.action_space.shape)
+    A = approximate_A(sim_env, x, u)
+    B = approximate_B(sim_env, x, u)
+    S = scipy.linalg.solve_continuous_are(A, B, Q, R, balanced=False)
+    x_star = env.goal
+    K = np.linalg.inv(R) @ B.T @ S
+    u = - K @ (x - x_star)
     return u

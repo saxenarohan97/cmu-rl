@@ -1,6 +1,6 @@
 import numpy as np
 import gym
-from lqr import controllers_ref as controllers
+from lqr import controllers
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import argparse
@@ -41,31 +41,35 @@ def main():
 
     env = gym.make(args.env)
     sim_env = gym.make(args.env)
+    sim_env.reset()
     av_ret = 0
     step_dt = 1e-3
     NUM_EPISODES = 5
-
     for episode in tqdm(range(NUM_EPISODES)):
         # ___ WRITE CODE HERE ___
         states = []
         us = []
         done = False
         state = env.reset()
+        total_reward = 0
         while not done:
             u = controllers.calc_lqr_input(env, sim_env)
-            # TODO: ... = env.step(u, dt=step_dt)
+            state, reward, done, _ = env.step(u, step_dt)
+            # env.render()
             # TODO: Store x_t, u_t
+            states.append(state)
+            us.append(u)
             # TODO: update average return
-
+            total_reward += reward
         print('Success! Total reward: ', total_reward)
-
+        av_ret += total_reward
         # plot the trajectory
         states = np.array(states)
         us = np.array(us)
         plot_state_and_controls(states, us, goal=env.goal, episode=episode)
 
     # We expect around -61.378163357148736
-    print('Average return: ', av_ret)
+    print('Average return: ', av_ret / NUM_EPISODES)
 
 
 if __name__ == '__main__':
